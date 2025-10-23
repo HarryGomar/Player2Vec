@@ -1,0 +1,10 @@
+streamlit>=1.37
+pandas>=2.1
+pyarrow>=15
+numpy>=1.26
+plotly>=5.22
+scikit-learn>=1.4
+umap-learn>=0.5.6
+hdbscan>=0.8.40
+scipy>=1.13
+joblib>=1.4
