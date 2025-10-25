@@ -11,7 +11,11 @@ try:  # Optional hdbscan dependency
 except Exception:
     _HAS_HDBSCAN = False
 
-import umap
+try:
+    import umap  # type: ignore
+    _HAS_UMAP = True
+except Exception:
+    _HAS_UMAP = False
 from sklearn.cluster import KMeans
 
 
@@ -24,6 +28,11 @@ def umap_embed(
     y: Optional[np.ndarray] = None,
     random_state: int = 42,
 ) -> np.ndarray:
+    if not _HAS_UMAP:
+        raise ImportError(
+            "UMAP (umap-learn) is required for UMAP embedding. Install it with: `pip install umap-learn`"
+        )
+
     reducer = umap.UMAP(
         n_neighbors=int(n_neighbors),
         min_dist=float(min_dist),

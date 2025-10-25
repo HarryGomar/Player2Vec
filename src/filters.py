@@ -21,13 +21,19 @@ class FilterSelections(TypedDict, total=False):
 
 
 def _initialise_selection(state_key: str, options: List[str]) -> List[str]:
+    # If the key is not present in session_state, initialise to the full options
+    # copy (this is the default behaviour before the user interacts). However,
+    # if the key is present (including an empty list because the user cleared
+    # the selection), respect the user's choice and do NOT auto-reset to all
+    # options. Also filter out any stale values that are no longer valid.
     current = st.session_state.get(state_key)
     if current is None:
         current = options.copy()
     else:
+        # keep user intent: if they cleared (empty list), preserve it
+        # but remove any values that are no longer valid options
         current = [item for item in current if item in options]
-        if not current and options:
-            current = options.copy()
+
     st.session_state[state_key] = current
     return current
 
@@ -57,10 +63,16 @@ def render_filter_sidebar(df: pd.DataFrame) -> FilterSelections:
     default_pos_mode = _initialise_selection(pos_mode_key, pos_mode)
     default_pos_coarse = _initialise_selection(pos_coarse_key, pos_coarse)
 
-    sel_teams = st.sidebar.multiselect("Team", options=teams, default=default_teams, key=teams_key)
-    sel_seasons = st.sidebar.multiselect("Season(s)", options=seasons, default=default_seasons, key=seasons_key)
-    sel_pos_mode = st.sidebar.multiselect("Position (fine)", options=pos_mode, default=default_pos_mode, key=pos_mode_key)
-    sel_pos_coarse = st.sidebar.multiselect("Position (coarse)", options=pos_coarse, default=default_pos_coarse, key=pos_coarse_key)
+    # Use the session_state key to control the widget's value. Do NOT pass
+    # `default`/`value` when the same key is already present in
+    # `st.session_state` because Streamlit will warn. We initialised the
+    # keys above with `_initialise_selection` so relying on the `key`
+    # argument is sufficient and preserves user actions (including empty
+    # selections).
+    sel_teams = st.sidebar.multiselect("Team", options=teams, key=teams_key)
+    sel_seasons = st.sidebar.multiselect("Season(s)", options=seasons, key=seasons_key)
+    sel_pos_mode = st.sidebar.multiselect("Position (fine)", options=pos_mode, key=pos_mode_key)
+    sel_pos_coarse = st.sidebar.multiselect("Position (coarse)", options=pos_coarse, key=pos_coarse_key)
 
     st.sidebar.caption("Tip: leave selections untouched to include everyone. Use Reset to start over.")
 
@@ -78,11 +90,13 @@ def render_filter_sidebar(df: pd.DataFrame) -> FilterSelections:
     min_key = f"{FILTER_PREFIX}_minmin"
     if min_key not in st.session_state:
         st.session_state[min_key] = float(default_min)
+    # The slider value is managed via st.session_state[min_key], which was
+    # initialised above if missing. Passing `value` together with `key`
+    # triggers Streamlit warnings, so we only pass `key` and range limits.
     min_minutes = st.sidebar.slider(
         "Min minutes",
         min_value=float(minutes_min),
         max_value=float(minutes_max),
-        value=float(st.session_state.get(min_key, default_min)),
         step=10.0,
         key=min_key,
     )
@@ -102,7 +116,6 @@ def render_filter_sidebar(df: pd.DataFrame) -> FilterSelections:
     selected_stats = st.sidebar.multiselect(
         "Stats to constrain",
         options=stat_options,
-        default=st.session_state[stats_key],
         key=stats_key,
     )
 
@@ -118,11 +131,11 @@ def render_filter_sidebar(df: pd.DataFrame) -> FilterSelections:
         prev = st.session_state.get(range_key, (lo, hi))
         clamped = (max(lo, min(prev[0], hi)), min(hi, max(prev[1], lo)))
         st.session_state[range_key] = clamped
+        # range slider value is managed via session_state[range_key]
         stat_ranges[col] = st.sidebar.slider(
             f"{col} range",
             min_value=lo,
             max_value=hi,
-            value=st.session_state[range_key],
             key=range_key,
         )
 

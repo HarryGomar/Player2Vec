@@ -116,7 +116,19 @@ with st.spinner("Running UMAP..."):
     supervision = None
     if supervise_col != "(none)" and supervise_col in filtered.columns:
         supervision = filtered[supervise_col]
-    coords = umap_embed(V, n_neighbors=n_neighbors, min_dist=min_dist, densmap=densmap, y=supervision)
+    try:
+        coords = umap_embed(V, n_neighbors=n_neighbors, min_dist=min_dist, densmap=densmap, y=supervision)
+    except ImportError as e:
+        st.error(
+            "UMAP is not installed in this environment. To enable UMAP embedding, install `umap-learn`:\n\n"
+            "pip: `pip install umap-learn`\n\n"
+            "conda: `conda install -c conda-forge umap-learn`\n\n"
+            "After installing, restart the app."
+        )
+        st.stop()
+    except Exception as e:
+        st.error(f"An error occurred while running UMAP: {type(e).__name__}: {e}")
+        st.stop()
 
 with st.spinner("Clustering points..."):
     if cluster_method == "kmeans":

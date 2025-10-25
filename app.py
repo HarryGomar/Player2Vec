@@ -27,93 +27,100 @@ st.markdown(
 
 st.markdown("---")
 
-st.header("What this app does")
-st.markdown(
-        """
-        - Build 2D/3D style maps (UMAP) from player embeddings so you can visually
-            explore clusters and play styles.
-        - Search for similar players or roles using vector similarity in embedding
-            space.
-        - Compare similarity scores with custom metrics and visualize relationships
-            between players.
-        - Generate and tune a composite **Fit Score** to rank candidate players for a
-            target role or profile.
-        """
-)
-
-st.header("Quick start — 4 simple steps")
-st.markdown(
-        """
-        1. In the sidebar choose your data source (a parquet file with cleaned player
-             features). Default: `data/players_clean.parquet` or upload your own.
-        2. Open **UMAP Explorer** to build and tune a UMAP projection. Inspect
-             clusters and select players of interest.
-        3. Use **Player or Role Search** to find nearest neighbours to a chosen
-             player or role embedding. Adjust similarity metric and top-K results.
-        4. Visit **Fit and Rankings** to create a composite fit score combining
-             similarity and your custom metrics, then export ranked candidate lists.
-
-        Tip: Start with a small sample of your data while experimenting with
-        UMAP and similarity parameters, then scale up once settings look good.
-        """
-)
-
 st.header("Pages walkthrough")
-with st.expander("1 — UMAP Explorer (visualize)", expanded=True):
-        st.markdown(
-                """
-                Create and tune UMAP projections from the selected embedding columns.
-                - Choose embedding columns or a precomputed embedding column.
-                - Adjust UMAP hyperparameters (n_neighbors, min_dist, n_components).
-                - Color points by metadata (team, role, season) and inspect points.
-                Use the interactive plot to pick players or regions for further analysis.
-                """
-        )
+st.header("Task-focused instructions")
+st.markdown("Use the tabs below to open guided instructions for the two main workflows: building/exploring maps, and finding & ranking players.")
 
-with st.expander("2 — Player or Role Search (find similar)"):
-        st.markdown(
-                """
-                Find nearest neighbours for a player or role prototype.
-                - Enter a player id or select multiple players to form a role vector.
-                - Choose similarity metric (cosine, euclidean) and number of results.
-                - Inspect returned players, their similarity scores, and key stats.
-                """
-        )
+tab_maps, tab_search = st.tabs(["Maps (UMAP Explorer)", "Player finding (Search & Fit)"])
 
-with st.expander("3 — Similarity Plot"):
-        st.markdown(
-                """
-                Plot similarity scores against custom metrics.
-                - Compare similarity with physical or performance metrics (goals, xG,
-                    pass completion) to find trade-offs.
-                - Use scatter, density, and marginal plots to examine distributions.
-                """
-        )
-
-with st.expander("4 — Fit and Rankings"):
-        st.markdown(
-                """
-                Define a composite Fit Score and rank candidates.
-                - Choose weights for similarity and any other normalized metrics.
-                - Preview ranked lists and export to CSV for downstream workflows.
-                - Save favorite configurations for repeatable searches.
-                """
-        )
-
-st.header("Data format & requirements")
-st.markdown(
+with tab_maps:
+    st.subheader("Maps — what and why")
+    st.markdown(
         """
-        - Expected input: a cleaned parquet file (default path: `data/players_clean.parquet`).
-        - Required columns: player id, embedding vector (or separate embedding columns),
-            and any metadata you want to filter or color by (team, role, season).
-        - If uploading, the uploader accepts `.parquet` files. Uploaded files are
-            written to `.uploads/` and used for the session.
+        The Maps workflow (UMAP Explorer) reduces high-dimensional player embeddings
+        into 2D or 3D for interactive exploration. This helps you find clusters of
+        similar playing styles, outliers, and relationships between players and
+        metadata (team, position, season).
 
-        If your embeddings are stored as multiple columns (e.g. emb_0..emb_127),
-        the data loader will automatically detect them. If you have a single column
-        storing a list/array per row, the loader will also accept that format.
+        Typical uses:
+        - Visualise embedding structure to discover natural groupings (styles/roles).
+        - Inspect nearby players to a selected point (who occupies a region).
+        - Select groups of players to create role prototypes for search.
+
+        Key features available in the UMAP Explorer:
+        - Select embedding columns or a single precomputed embedding vector column.
+        - Tune UMAP hyperparameters (n_neighbors, min_dist, n_components) to
+          control local/global structure.
+        - Color and size points by metadata or numeric stats (team, position, goals,
+          minutes) to reveal patterns.
+        - Filter the dataset (season, team, minimum minutes) to focus on subsets.
+        - Hover and click points to see player details and add them to a selection.
+        - Export selected players for downstream similarity searches or ranking.
+
+        Quick steps to use Maps:
+        1. Choose embedding columns or a precomputed embedding column.
+        2. Tune `n_neighbors` and `min_dist` to change granularity.
+        3. Use Color/Size controls to map metadata or metrics to visuals.
+        4. Use filters to restrict the plot to seasons, teams, or minimum minutes.
+        5. Select interesting players or regions and export the selection for the
+           Player finding workflow.
+
+        Tips & caveats:
+        - Start with a small sample while experimenting with parameters.
+        - UMAP is stochastic: set a random seed for reproducible projections.
+        - Normalise or scale features consistently before embedding.
         """
-)
+    )
+
+with tab_search:
+    st.subheader("Player finding — overview")
+    st.markdown(
+        """
+        The Player finding workflow lets you search for players similar to a query
+        and create ranked candidate lists using a composite Fit Score.
+
+        Query types supported:
+        - Single player: provide a player id to use that player's embedding as the
+          query vector.
+        - Prototype / Role vector: average embeddings from a selection of players
+          (for example all players who play a specific position in a given team),
+          or build a prototype by selecting multiple players from the Maps page.
+
+        What the page does:
+        1. Apply dataset filters (season, team, position, mins) to restrict candidates.
+        2. Accept a query vector (single player or averaged prototype).
+        3. Run a nearest-neighbour search (choose metric: cosine, euclidean) and
+           return a table of the top-K most similar players with similarity scores.
+        4. Visualise results with multiple indicators (scatter plots, radar charts,
+           histograms) to compare similarity against performance stats.
+        5. Build a Fit Score by combining similarity with other normalized metrics
+           (e.g. goals per 90, xG, pass completion) using user-specified weights.
+        6. Export ranked candidate lists to CSV for scouting or reporting.
+
+        Step-by-step quick guide:
+        1. Set filters to narrow the candidate pool (season, team, minimum minutes).
+        2. Choose query type:
+           - Enter a player id for a direct lookup, or
+           - Select multiple players / position to compute an averaged prototype.
+        3. Select similarity metric and top-K (e.g. top 50).
+        4. Run the search — examine the returned table (similarity score + key stats).
+        5. Use the Plot tab to visualise metrics for top candidates (use different
+           indicators to inspect trade-offs between style and performance).
+        6. Create a Fit Score: normalise chosen stats, set weights, preview the ranked list,
+           and export the results.
+
+        Practical tips:
+        - When averaging embeddings to make a prototype, ensure the players are
+          comparable (same position / similar minutes) to avoid noisy prototypes.
+        - Use cosine similarity for directional comparisons (typical for neural
+          embeddings). If embeddings encode magnitude meaning, consider Euclidean.
+        - Normalize metrics to the same scale before combining into a Fit Score.
+        - Save good weight configurations so you can reproduce searches later.
+        """
+    )
+
+st.markdown("---")
+
 
 st.header("Tips, pitfalls & FAQs")
 st.markdown(
