@@ -8,6 +8,7 @@ import pandas as pd
 import streamlit as st
 
 from .constants import EMBED_COL, ID_COLS, NUMERIC_STATS
+from .utils import to_season_label
 
 
 @st.cache_data(show_spinner=False)
@@ -50,6 +51,10 @@ def load_players(path: str) -> pd.DataFrame:
     # Drop rows missing key identifiers
     needed = ["ps_index", "player_name", "team_name", "season_id"]
     df = df.dropna(subset=[c for c in needed if c in df.columns])
+
+    if "season_id" in df.columns:
+        df["season_code"] = df["season_id"]
+        df["season_label"] = df["season_id"].apply(to_season_label)
 
     # Deduplicate ps_index if necessary
     if "ps_index" in df.columns and df["ps_index"].duplicated().any():

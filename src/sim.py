@@ -24,8 +24,9 @@ def get_query_vec_player(
     minutes_weighted: bool = True,
 ) -> np.ndarray:
     rows = df[df["player_name"].eq(player_name)]
+    season_field = "season_label" if "season_label" in df.columns else "season_id"
     if seasons is not None and len(list(seasons)) > 0:
-        rows = rows[rows["season_id"].isin(list(seasons))]
+        rows = rows[rows[season_field].isin(list(seasons))]
     if rows.empty:
         raise ValueError("No rows match the selected player/seasons")
 
@@ -51,8 +52,9 @@ def get_query_vec_role(
 ) -> Tuple[np.ndarray, pd.DataFrame]:
     mask = pd.Series(True, index=df.index)
     mask &= df["minutes"] >= float(min_minutes)
+    season_field = "season_label" if "season_label" in df.columns else "season_id"
     if seasons:
-        mask &= df["season_id"].isin(list(seasons))
+        mask &= df[season_field].isin(list(seasons))
     if team:
         mask &= df["team_name"].eq(team)
     if pos_mode:

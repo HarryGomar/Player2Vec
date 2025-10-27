@@ -49,7 +49,8 @@ def render_filter_sidebar(df: pd.DataFrame) -> FilterSelections:
     st.sidebar.header("Filters")
 
     teams = sorted(df.get("team_name", pd.Series(dtype=str)).dropna().unique().tolist())
-    seasons = sorted(df.get("season_id", pd.Series(dtype=str)).dropna().unique().tolist())
+    season_field = "season_label" if "season_label" in df.columns else "season_id"
+    seasons = sorted(df.get(season_field, pd.Series(dtype=str)).dropna().unique().tolist())
     pos_mode = sorted(df.get("position_mode", pd.Series(dtype=str)).dropna().unique().tolist())
     pos_coarse = sorted(df.get("position_mode_coarse", pd.Series(dtype=str)).dropna().unique().tolist())
 
@@ -162,7 +163,8 @@ def apply_filters(df: pd.DataFrame, selections: FilterSelections) -> pd.DataFram
             mask &= team_col.isin(teams)
 
     seasons = selections.get("seasons", []) or []
-    season_col = df.get("season_id")
+    season_field = "season_label" if "season_label" in df.columns else "season_id"
+    season_col = df.get(season_field)
     if seasons and season_col is not None:
         available = season_col.dropna().unique()
         if len(seasons) < len(available):

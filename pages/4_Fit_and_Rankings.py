@@ -69,6 +69,7 @@ columns_to_show = [
     for col in [
         "ps_index",
         "player_name",
+    "season_label",
         "season_id",
         "team_name",
         "minutes",

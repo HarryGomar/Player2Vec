@@ -57,7 +57,7 @@ if y_col is None:
     st.error("No numeric stats available in the dataset to plot.")
     st.stop()
 
-color_options = ["team_name", "season_id", "position_mode", "position_mode_coarse", "minutes", *available_stats]
+color_options = ["team_name", "season_label", "season_id", "position_mode", "position_mode_coarse", "minutes", *available_stats]
 color_by = st.selectbox("Colour by", options=[c for c in color_options if c in plot_df.columns], index=0)
 
 size_options = ["(none)", "minutes", *available_stats]
@@ -99,6 +99,6 @@ else:
 st.plotly_chart(fig, use_container_width=True, theme="streamlit")
 
 if st.checkbox("Show table for points above threshold"):
-    cols = ["player_name", "team_name", "season_id", "sim", y_col]
+    cols = ["player_name", "team_name", "season_label", "season_id", "sim", y_col]
     cols += [c for c in hover_cols if c not in cols]
     st.dataframe(plot_df[plot_df["sim"] >= threshold][cols].sort_values("sim", ascending=False), use_container_width=True)

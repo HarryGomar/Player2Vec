@@ -41,6 +41,8 @@ def plot_umap(
     data = df.copy()
     data["umap_x"], data["umap_y"] = Y[:, 0], Y[:, 1]
 
+    season_field = "season_label" if "season_label" in data.columns else "season_id"
+
     color_col = color if color in data.columns else None
     size_col = size if size in data.columns else None
     hover_cols = _prepare_hover(data, hover_cols)
@@ -68,11 +70,10 @@ def plot_umap(
         if label_indices:
             label_df = data.loc[label_indices].copy()
             def _format_label(row: pd.Series) -> str:
-                stat_bits = [
-                    f"{stat}: {row[stat]:.2f}" for stat in stats if stat in row and pd.notnull(row[stat])
-                ]
+                stat_bits = [f"{stat}: {row[stat]:.2f}" for stat in stats if stat in row and pd.notnull(row[stat])]
                 suffix = f" ({', '.join(stat_bits)})" if stat_bits else ""
-                season = f" [{row['season_id']}]" if "season_id" in row and pd.notnull(row["season_id"]) else ""
+                season_val = row.get(season_field)
+                season = f" [{season_val}]" if pd.notnull(season_val) else ""
                 return f"{row['player_name']}{season}{suffix}"
 
             label_df["label_text"] = label_df.apply(_format_label, axis=1)
@@ -83,9 +84,10 @@ def plot_umap(
                     mode="text",
                     text=label_df["label_text"],
                     textposition="top center",
-                    textfont=dict(size=11, color="#111", family="Arial"),
+                    textfont=dict(size=12, color="#f59e0b", family="Inter, Arial, sans-serif"),
                     showlegend=False,
                     hoverinfo="skip",
+                    cliponaxis=False,
                 )
             )
 
@@ -96,7 +98,16 @@ def plot_umap(
             palette = px_qual.Safe
             for idx, (player, group) in enumerate(highlight_df.groupby("player_name")):
                 color_hex = palette[idx % len(palette)]
-                group_sorted = group.sort_values(by=["season_id", "minutes"]) if "season_id" in group else group
+                sort_cols = [col for col in ("season_code", "season_id", "minutes") if col in group.columns]
+                group_sorted = group.sort_values(by=sort_cols) if sort_cols else group
+                season_values = group_sorted.get(season_field)
+                if season_values is not None:
+                    highlight_text = [
+                        f"{player} ({season})" if pd.notnull(season) else player
+                        for season in season_values.tolist()
+                    ]
+                else:
+                    highlight_text = [player] * len(group_sorted)
                 fig.add_trace(
                     go.Scattergl(
                         x=group_sorted["umap_x"],
@@ -109,7 +120,7 @@ def plot_umap(
                             line=dict(width=2, color="#222"),
                         ),
                         name=f"{player} highlight",
-                        text=[f"{player} ({s})" for s in group_sorted.get("season_id", [])],
+                        text=highlight_text,
                         hovertemplate="%{text}<extra></extra>",
                         showlegend=False,
                     )

@@ -29,6 +29,7 @@ if not path or not os.path.exists(path):
     st.stop()
 
 df = load_players(path)
+season_field = "season_label" if "season_label" in df.columns else "season_id"
 
 filter_selections = render_filter_sidebar(df)
 candidates = apply_filters(df, filter_selections)
@@ -47,7 +48,7 @@ query_description = ""
 if mode == "Player-based":
     names = sorted(df["player_name"].dropna().unique())
     player = st.selectbox("Query player", names)
-    seasons_opt = st.multiselect("Limit to seasons", sorted(df["season_id"].dropna().unique()))
+    seasons_opt = st.multiselect("Limit to seasons", sorted(df[season_field].dropna().unique()))
     minutes_weighted = st.checkbox("Minutes-weighted average", value=True)
     if st.button("Build player query", type="primary", use_container_width=True):
         query_vector = get_query_vec_player(df, player_name=player, seasons=seasons_opt, minutes_weighted=minutes_weighted)
@@ -59,7 +60,10 @@ else:
         team = st.selectbox("Team (optional)", options=[None] + sorted(df.get("team_name", pd.Series(dtype=str)).dropna().unique().tolist()))
     with c2:
         pos_coarse = st.selectbox("Position (coarse)", options=[None] + sorted(df.get("position_mode_coarse", pd.Series(dtype=str)).dropna().unique().tolist()))
-        seasons_role = st.multiselect("Season(s) (optional)", sorted(df.get("season_id", pd.Series(dtype=str)).dropna().unique().tolist()))
+        seasons_role = st.multiselect(
+            "Season(s) (optional)",
+            sorted(df.get(season_field, pd.Series(dtype=str)).dropna().unique().tolist()),
+        )
     min_minutes_role = st.number_input("Min minutes in role pool", min_value=0, value=300, step=30)
     minutes_weighted = st.checkbox("Minutes-weighted centroid", value=True, key="role_minutes_weighted")
     if st.button("Build role centroid", type="primary", use_container_width=True):
@@ -92,6 +96,7 @@ result_cols = [
     for col in [
         "ps_index",
         "player_name",
+    "season_label",
         "season_id",
         "team_name",
         "minutes",

@@ -159,7 +159,7 @@ fig = plot_umap(
 
 st.plotly_chart(fig, use_container_width=True, theme="streamlit")
 
-download_df = plot_df[["ps_index", "player_name", "season_id", "team_name", "minutes", "cluster"]].copy()
+download_df = plot_df[["ps_index", "player_name", "season_label", "season_id", "team_name", "minutes", "cluster"]].copy()
 download_df["umap_x"], download_df["umap_y"] = coords[:, 0], coords[:, 1]
 st.download_button(
     "Download UMAP CSV",

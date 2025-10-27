@@ -17,12 +17,23 @@ ID_COLS = [
 
 DEFAULT_MIN_MINUTES = 300
 
+SEASON_LABELS = {
+    108: "2021/2022",
+    "108": "2021/2022",
+    235: "2022/2023",
+    "235": "2022/2023",
+    281: "2023/2024",
+    "281": "2023/2024",
+    317: "2024/2025",
+    "317": "2024/2025",
+}
+
 CATEGORICAL_DIMENSIONS = [
-    "team_name", "season_id", "position_mode", "position_mode_coarse", "pos_group"
+    "team_name", "season_id", "season_label", "position_mode", "position_mode_coarse", "pos_group"
 ]
 
 DEFAULT_HOVER_COLUMNS = [
-    "player_name", "team_name", "season_id", "minutes", "position_mode"
+    "player_name", "team_name", "season_label", "season_id", "minutes", "position_mode"
 ]
 
 EMBED_COL = "z_style_unit"
