@@ -85,7 +85,9 @@ def render_filter_sidebar(df: pd.DataFrame) -> FilterSelections:
         minutes_max = minutes_min + 1.0
     if minutes_max <= minutes_min:
         minutes_max = minutes_min + 1.0
-    default_min = min(DEFAULT_MIN_MINUTES, minutes_max)
+    # Clamp the default slider value into the valid range so Streamlit does not
+    # raise errors when the dataset minimum exceeds `DEFAULT_MIN_MINUTES`.
+    default_min = max(minutes_min, min(DEFAULT_MIN_MINUTES, minutes_max))
 
     min_key = f"{FILTER_PREFIX}_minmin"
     if min_key not in st.session_state:
